@@ -154,33 +154,55 @@ if live and live[0] != input_id(resume, jd):
     st.info("资料已更新，旧的真实分析结果已隐藏。")
 elif live:
     _, data, usage = live
-    st.success("真实分析已返回，结构与原文引用检查通过；仍需本人核对事实及改写含义。")
+    warnings = data.get("warnings", [])
+    if warnings:
+        st.warning("真实分析已返回，部分字段或证据需要人工核对。")
+        with st.expander("查看需核对项"):
+            for item in warnings:
+                st.write("• " + item)
+    else:
+        st.success("真实分析已返回；仍需本人核对事实及填写内容。")
     st.caption("输入 Token：%s · 输出 Token：%s；实际费用请查看 DeepSeek 账单。" % (usage.get('prompt_tokens','未返回'), usage.get('completion_tokens','未返回')))
-    profile_tab, match_tab, rewrite_tab, answer_tab = st.tabs(["真实·基础资料", "真实·岗位匹配", "真实·改写对照", "真实·回答草稿"])
-    with profile_tab:
-        for row in data['profile']:
-            st.text("%s / %s：%s" % (row['section'], row['field'], row['value']))
-            if row['evidence']:
-                st.caption("原文依据：" + row['evidence'])
-    with match_tab:
-        for row in data['matches']:
+    info_tab, edu_tab, exp_tab, project_tab, skill_tab, answer_tab = st.tabs(["基础信息", "教育经历", "实习经历", "项目经历", "技能语言", "网申回答"])
+    with info_tab:
+        info = data.get("basic_info", {})
+        rows = [{"字段": k, "内容": v} for k, v in info.items()]
+        st.table(rows or [{"字段": "暂无", "内容": "待补充"}])
+    with edu_tab:
+        for i, row in enumerate(data.get("education", []), 1):
             with st.container(border=True):
-                st.text(row['requirement'] + ' — ' + row['status'])
-                st.text(row['note'])
-                st.caption('原文依据：' + (row['evidence'] or '未提供'))
-        st.write("需要补充：")
-        for question in data['questions']:
-            st.text(question)
-    with rewrite_tab:
-        for row in data['rewrites']:
+                st.markdown("**教育经历 %s**" % i)
+                st.write(row)
+        if not data.get("education"):
+            st.info("未提取到教育经历。")
+    with exp_tab:
+        for i, row in enumerate(data.get("internships", []), 1):
             with st.container(border=True):
-                old, new = st.columns(2)
-                old.text('原文：' + row['before'])
-                new.text('建议：' + row['after'])
-                st.caption(row['why'])
+                st.markdown("**实习经历 %s**" % i)
+                st.write(row)
+        if not data.get("internships"):
+            st.info("未提取到实习经历。")
+    with project_tab:
+        for i, row in enumerate(data.get("projects", []), 1):
+            with st.container(border=True):
+                st.markdown("**项目经历 %s**" % i)
+                st.write(row)
+        if not data.get("projects"):
+            st.info("未提取到项目经历。")
+    with skill_tab:
+        st.write(data.get("skills", {}) or "待补充")
+        st.markdown("#### 需要补充")
+        for question in data.get("questions", []):
+            st.write("• " + question)
     with answer_tab:
-        st.text(data['answer'])
-        st.caption('%s / 200 字符' % len(data['answer']))
+        answers = data.get("application_answers", [])
+        for i, row in enumerate(answers, 1):
+            with st.container(border=True):
+                st.markdown("**回答草稿 %s**" % i)
+                st.caption(row.get("question", "网申问题"))
+                st.write(row.get("answer", ""))
+        if not answers:
+            st.info("未生成开放题草稿。")
     st.download_button("下载真实分析结果（JSON）", json.dumps(data, ensure_ascii=False, indent=2), file_name="careerfit-analysis.json", mime="application/json")
 
 st.divider()
