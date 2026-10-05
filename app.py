@@ -83,17 +83,17 @@ elif st.session_state.get("result_id"):
         st.caption("以下资料按内置虚构简历人工整理，尚未接入自动提取。未提供的字段保持待补充。")
         st.markdown("#### 基本信息")
         st.table({"字段": ["姓名", "手机", "邮箱", "期望城市", "岗位方向", "可到岗时间"],
-                  "内容": ["林夏（虚构示例）", "待补充", "待补充", "北京、上海", "搜索、增长类产品", "待补充"]})
+                  "内容": ["林夏（虚构示例）", "待补充", "待补充", "北京、上海", "新媒体运营、直播运营、用户运营", "待补充"]})
         st.markdown("#### 教育经历")
-        st.table({"学校": ["示例大学"], "专业": ["信息管理"], "学历": ["本科"], "起止时间": ["2023.09—2027.06"]})
+        st.table({"学校": ["示例大学"], "专业": ["新闻传播"], "学历": ["本科"], "起止时间": ["2023.09—2027.06"]})
         st.markdown("#### 实习经历")
-        st.write("**星河电商｜搜索产品实习生｜2026.06—2026.08**")
+        st.write("**青柚生活｜新媒体运营实习生｜2026.06—2026.08**")
         st.write(RESUME.split("2026.06—2026.08\n", 1)[1].split("\n\n", 1)[0])
         st.markdown("#### 项目经历")
-        st.write("**校园活动报名工具｜课程项目｜2026.03—2026.05**")
-        st.write("访谈8位同学，设计报名与取消流程，完成交互原型。")
+        st.write("**校园音乐节宣传｜课程项目｜2026.03—2026.05**")
+        st.write("负责活动预热推文和社群通知，设计报名提醒文案，协助完成现场志愿者沟通。")
         st.markdown("#### 技能")
-        st.write("SQL 多表关联；Excel 数据透视表；Figma 原型设计。")
+        st.write("公众号排版；小红书内容运营；Excel 数据整理；基础海报制作。")
         st.caption("后续将支持从用户最新简历提取、多段教育与实习经历，以及逐项编辑确认。")
     with tabs[1]:
         for i,m in enumerate(MATCHES, 1):
@@ -123,7 +123,7 @@ elif st.session_state.get("result_id"):
         st.caption("限200字示例 · 以字符数计算，包含标点")
         st.write(ANSWER)
         st.caption("当前 %s / 200 字符 · %s" % (len(ANSWER), "符合限制" if len(ANSWER)<=200 else "超过限制"))
-        st.write("依据：搜索无结果分析、研发协作与 A/B 复盘。未声称掌握 Python，也未替用户承诺到岗时间。")
+        st.write("依据：内容发布、直播活动跟进、评论反馈整理和运营周报。未替用户承诺到岗时间。")
     st.download_button("下载本次示例报告 · Markdown", report_text(resume,jd,MATCHES,REWRITES,ANSWER,QUESTIONS), file_name="careerfit-demo-report.md", mime="text/markdown", use_container_width=True)
 else:
     st.markdown("---")
