@@ -24,11 +24,12 @@ class LiveTests(unittest.TestCase):
                 analyze(RESUME, JD, 'fake-test-key')
             self.assertEqual(call.call_count,1)
 
-    def test_invented_profile_rejected(self):
+    def test_invented_profile_warned(self):
         data = self.fixture()
         data['profile'] = [dict(section='学历',field='学校',value='不存在大学',evidence='不存在大学')]
-        with self.assertRaises(ValueError):
-            check_result(data,RESUME)
+        result = check_result(data, RESUME)
+        self.assertTrue(result.get("warnings"))
+    
 
     def test_empty_input_never_calls(self):
         with patch('live_analysis.urlopen') as call:

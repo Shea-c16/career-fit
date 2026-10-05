@@ -3,17 +3,60 @@ import json
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
-from core import validate_evidence
+from core import evidence_in_resume, validate_evidence
 
 MODEL = 'deepseek-flash'
 
 SCHEMA = '''仅输出 JSON 对象：
-{"profile":[{"section":"基本信息/教育经历/实习经历/项目经历/技能","field":"字段名称（多段经历注明序号）","value":"内容或待补充","evidence":"简历逐字原文；待补充时为空"}],
-"matches":[{"requirement":"岗位要求","status":"有直接证据/部分证据/未找到证据/需要确认","evidence":"逐字原文或空字符串","note":"理由"}],
-"rewrites":[{"before":"简历中连续原文","after":"改写建议","evidence":"简历逐字原文","why":"修改理由"}],
-"answer":"为什么申请该岗位的草稿，不超过200字符（含标点）",
-"questions":["待确认问题"]}
-所有字段必填，列表无内容可为空。基础资料覆盖学校、学历、专业、日期、各段实习和项目。缺失电话和邮箱填待补充，不输出证件号码。不要省略经历，不新增事实。最多改写3段。'''
+{
+  "basic_info": {
+    "name": "",
+    "phone": "",
+    "email": "",
+    "location_preference": "",
+    "job_preference": ""
+  },
+  "education": [
+    {
+      "school": "",
+      "major": "",
+      "degree": "",
+      "start_end": "",
+      "courses": ""
+    }
+  ],
+  "internships": [
+    {
+      "company": "",
+      "department": "",
+      "role": "",
+      "start_end": "",
+      "business_context": "",
+      "responsibilities": ""
+    }
+  ],
+  "projects": [
+    {
+      "name": "",
+      "role": "",
+      "start_end": "",
+      "description": ""
+    }
+  ],
+  "skills": {
+    "technical": "",
+    "language": "",
+    "certificates": ""
+  },
+  "application_answers": [
+    {
+      "question": "",
+      "answer": ""
+    }
+  ],
+  "questions": []
+}
+缺失字段填“待补充”。不要输出身份证号等敏感证件号码。不要新增事实。JD 只用于生成开放题草稿和待补充问题。'''
 
 
 def check_result(data, resume):
@@ -35,16 +78,16 @@ def check_result(data, resume):
     for row in data['profile']:
         if row['value'] != '待补充' and not row['evidence']:
             issues.append('基础资料缺少原文依据')
-        if row['evidence'] and row['evidence'] not in resume:
+        if row['evidence'] and not evidence_in_resume(resume, row['evidence']):
             issues.append('基础资料引用无法定位')
     for row in data['matches']:
         if row['status'] not in ('有直接证据','部分证据','未找到证据','需要确认'):
             issues.append('匹配状态不正确')
         if row['status'] in ('有直接证据','部分证据') and not row['evidence']:
             issues.append('匹配结论缺少依据')
-    if issues:
-        raise ValueError('；'.join(issues))
+    data["warnings"] = issues
     return data
+    
 
 
 def analyze(resume, jd, key):

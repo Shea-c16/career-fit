@@ -1,5 +1,5 @@
 import unittest
-from core import input_id, validate_evidence
+from core import evidence_in_resume, input_id, validate_evidence
 from examples import RESUME, MATCHES, REWRITES, ANSWER
 
 class EvidenceTests(unittest.TestCase):
@@ -8,6 +8,11 @@ class EvidenceTests(unittest.TestCase):
 
     def test_fabricated_source_rejected(self):
         self.assertTrue(validate_evidence(RESUME, [{"evidence":"独立开发推荐算法，收入提升50%"}], []))
+
+    def test_fuzzy_evidence_accepted(self):
+        resume = "协助运营小红书和公众号账号，整理选题日历，完成图文排版与发布。"
+        quote = "协助运营小红书及公众号账号，整理选题日历并完成图文发布"
+        self.assertTrue(evidence_in_resume(resume, quote))
 
     def test_changed_resume_invalidates_result(self):
         self.assertNotEqual(input_id("原简历", "JD"), input_id("新增项目", "JD"))

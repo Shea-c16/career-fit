@@ -37,8 +37,8 @@ with st.sidebar:
         st.write("已接入真实分析接口，尚待实际模型验收。暂不包含网站自动投递。")
 
 st.caption("CAREERFIT / FROM EXPERIENCE TO OPPORTUNITY")
-st.title("让经历与岗位，对得上。")
-st.write("对照岗位要求找到证据，保留贡献边界，再做有依据的表达调整。")
+st.title("把简历内容，整理成网申材料。")
+st.write("从简历中提取基础信息、教育经历、实习经历、项目经历和技能信息，再结合岗位 JD 生成可复制的填写草稿。")
 st.caption("示例模式不上传输入；真实分析将发送两个输入框的内容到 DeepSeek。不预测录用概率。")
 
 a,b,_ = st.columns([2,2,6])
