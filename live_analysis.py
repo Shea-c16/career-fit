@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
-from core import evidence_in_resume, validate_evidence
 
 MODEL = 'deepseek-flash'
 
@@ -43,10 +42,27 @@ SCHEMA = '''仅输出 JSON 对象：
       "description": ""
     }
   ],
+  "campus_experience": [
+    {
+      "name": "",
+      "role": "",
+      "start_end": "",
+      "description": ""
+    }
+  ],
+  "awards": [
+    {
+      "name": "",
+      "level": "",
+      "time": "",
+      "description": ""
+    }
+  ],
   "skills": {
     "technical": "",
     "language": "",
-    "certificates": ""
+    "certificates": "",
+    "self_evaluation": ""
   },
   "application_answers": [
     {
@@ -56,36 +72,48 @@ SCHEMA = '''仅输出 JSON 对象：
   ],
   "questions": []
 }
-缺失字段填“待补充”。不要输出身份证号等敏感证件号码。不要新增事实。JD 只用于生成开放题草稿和待补充问题。'''
+缺失字段填“待补充”。不要输出身份证号等敏感证件号码。不要新增事实。学生工作、社团、志愿者、校园活动放入 campus_experience；竞赛、奖项、荣誉放入 awards；自我评价放入 skills.self_evaluation。JD 只用于生成开放题草稿和待补充问题。application_answers 至少包含个人评价/自我介绍、岗位匹配理由两个常见网申草稿。'''
 
 
 def check_result(data, resume):
     if not isinstance(data, dict):
         raise ValueError('返回内容不是结构化报告')
-    fields = {'profile': ('section','field','value','evidence'), 'matches': ('requirement','status','evidence','note'), 'rewrites': ('before','after','evidence','why')}
-    for name, keys in fields.items():
-        rows = data.get(name)
-        if not isinstance(rows, list):
+
+    required = [
+        'basic_info',
+        'education',
+        'internships',
+        'projects',
+        'campus_experience',
+        'awards',
+        'skills',
+        'application_answers',
+        'questions',
+    ]
+    for name in required:
+        if name not in data:
             raise ValueError('缺少报告字段：' + name)
-        for row in rows:
-            if not isinstance(row, dict) or any(not isinstance(row.get(k), str) for k in keys):
-                raise ValueError('报告字段格式错误：' + name)
-    if not isinstance(data.get('answer'), str) or len(data['answer']) > 200:
-        raise ValueError('回答格式不正确或超过200字符')
-    if not isinstance(data.get('questions'), list) or any(not isinstance(q, str) for q in data['questions']):
+
+    if not isinstance(data['basic_info'], dict):
+        raise ValueError('基础信息格式错误')
+    if not isinstance(data['education'], list):
+        raise ValueError('教育经历格式错误')
+    if not isinstance(data['internships'], list):
+        raise ValueError('实习经历格式错误')
+    if not isinstance(data['projects'], list):
+        raise ValueError('项目经历格式错误')
+    if not isinstance(data['campus_experience'], list):
+        raise ValueError('学生工作格式错误')
+    if not isinstance(data['awards'], list):
+        raise ValueError('竞赛奖项格式错误')
+    if not isinstance(data['skills'], dict):
+        raise ValueError('技能信息格式错误')
+    if not isinstance(data['application_answers'], list):
+        raise ValueError('网申回答格式错误')
+    if not isinstance(data['questions'], list) or any(not isinstance(q, str) for q in data['questions']):
         raise ValueError('待确认问题格式不正确')
-    issues = validate_evidence(resume, data['matches'], data['rewrites'])
-    for row in data['profile']:
-        if row['value'] != '待补充' and not row['evidence']:
-            issues.append('基础资料缺少原文依据')
-        if row['evidence'] and not evidence_in_resume(resume, row['evidence']):
-            issues.append('基础资料引用无法定位')
-    for row in data['matches']:
-        if row['status'] not in ('有直接证据','部分证据','未找到证据','需要确认'):
-            issues.append('匹配状态不正确')
-        if row['status'] in ('有直接证据','部分证据') and not row['evidence']:
-            issues.append('匹配结论缺少依据')
-    data["warnings"] = issues
+
+    data['warnings'] = []
     return data
     
 

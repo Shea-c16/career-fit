@@ -22,6 +22,37 @@ def clear_inputs():
     st.session_state.jd = ""
     st.session_state.pop("result_id", None)
 
+def show_field_table(row):
+    if not isinstance(row, dict):
+        st.write(row)
+        return
+    labels = {
+        "name": "姓名",
+        "phone": "手机",
+        "email": "邮箱",
+        "location_preference": "期望地点",
+        "job_preference": "求职方向",
+        "school": "学校",
+        "major": "专业",
+        "degree": "学历",
+        "start_end": "起止时间",
+        "courses": "相关课程",
+        "company": "公司",
+        "department": "部门",
+        "role": "角色/岗位",
+        "business_context": "业务背景",
+        "responsibilities": "工作内容",
+        "description": "经历描述",
+        "technical": "技能",
+        "language": "语言能力",
+        "certificates": "证书",
+        "self_evaluation": "个人评价",
+        "level": "级别",
+        "time": "时间",
+    }
+    rows = [{"字段": labels.get(key, key), "内容": value or "待补充"} for key, value in row.items()]
+    st.table(rows)
+
 st.session_state.setdefault("resume", "")
 st.session_state.setdefault("jd", "")
 
@@ -163,7 +194,7 @@ elif live:
     else:
         st.success("真实分析已返回；仍需本人核对事实及填写内容。")
     st.caption("输入 Token：%s · 输出 Token：%s；实际费用请查看 DeepSeek 账单。" % (usage.get('prompt_tokens','未返回'), usage.get('completion_tokens','未返回')))
-    info_tab, edu_tab, exp_tab, project_tab, skill_tab, answer_tab = st.tabs(["基础信息", "教育经历", "实习经历", "项目经历", "技能语言", "网申回答"])
+    info_tab, edu_tab, exp_tab, project_tab, campus_tab, award_tab, skill_tab, answer_tab = st.tabs(["基础信息", "教育经历", "实习经历", "项目经历", "学生工作", "竞赛奖项", "技能语言", "网申回答"])
     with info_tab:
         info = data.get("basic_info", {})
         rows = [{"字段": k, "内容": v} for k, v in info.items()]
@@ -172,25 +203,39 @@ elif live:
         for i, row in enumerate(data.get("education", []), 1):
             with st.container(border=True):
                 st.markdown("**教育经历 %s**" % i)
-                st.write(row)
+                show_field_table(row)
         if not data.get("education"):
             st.info("未提取到教育经历。")
     with exp_tab:
         for i, row in enumerate(data.get("internships", []), 1):
             with st.container(border=True):
                 st.markdown("**实习经历 %s**" % i)
-                st.write(row)
+                show_field_table(row)
         if not data.get("internships"):
             st.info("未提取到实习经历。")
     with project_tab:
         for i, row in enumerate(data.get("projects", []), 1):
             with st.container(border=True):
                 st.markdown("**项目经历 %s**" % i)
-                st.write(row)
+                show_field_table(row)
         if not data.get("projects"):
             st.info("未提取到项目经历。")
+    with campus_tab:
+        for i, row in enumerate(data.get("campus_experience", []), 1):
+            with st.container(border=True):
+                st.markdown("**学生工作/校园经历 %s**" % i)
+                show_field_table(row)
+        if not data.get("campus_experience"):
+            st.info("未提取到学生工作或校园经历。")
+    with award_tab:
+        for i, row in enumerate(data.get("awards", []), 1):
+            with st.container(border=True):
+                st.markdown("**竞赛/奖项 %s**" % i)
+                show_field_table(row)
+        if not data.get("awards"):
+            st.info("未提取到竞赛或奖项。")
     with skill_tab:
-        st.write(data.get("skills", {}) or "待补充")
+        show_field_table(data.get("skills", {}) or {"技能": "待补充"})
         st.markdown("#### 需要补充")
         for question in data.get("questions", []):
             st.write("• " + question)
